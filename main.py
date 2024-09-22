@@ -1,54 +1,109 @@
+MENU = {
+    "espresso": {
+        "ingredients": {
+            "water": 50,
+            "coffee": 18,
+        },
+        "cost": 1.5,
+    },
+    "latte": {
+        "ingredients": {
+            "water": 200,
+            "milk": 150,
+            "coffee": 24,
+        },
+        "cost": 2.5,
+    },
+    "cappuccino": {
+        "ingredients": {
+            "water": 250,
+            "milk": 100,
+            "coffee": 24,
+        },
+        "cost": 3.0,
+    }
+}
 
-from turtle import Screen
-from food import Food
-from scoreboard import ScoreBoard
-import time
-from snake import Snake
-
-my_screen = Screen()
-my_screen.setup(width=500, height=500)
-my_screen.bgcolor("black")
-my_screen.tracer(0)
-
-snake = Snake()
-food = Food()
-scoreboard = ScoreBoard()
-
-my_screen.listen()
-my_screen.onkey(snake.up, "Up")
-my_screen.onkey(snake.down, "Down")
-my_screen.onkey(snake.right, "Right")
-my_screen.onkey(snake.left, "Left")
-
-game_is_on = True
-while game_is_on:
-    my_screen.update()
-    time.sleep(0.1)
-
-    snake.move()
-
-    #collisoin with food
-    if snake.head.distance(food) < 15:
-        food.refresh()
-        snake.extend_segment()
-        scoreboard.calculate_score()
-        print("Yummy......!")
-
-    if snake.head.xcor() > 245 or snake.head.xcor() < -245 or snake.head.ycor() > 245 or snake.head.ycor() < -245:
-        scoreboard.reset()
-        snake.reset()
-        # game_is_on = False
-        # scoreboard.game_over()
-
-    # detect collision with the tail
-
-    for segment in snake.segments[1:]:
-
-        if snake.head.distance(segment) < 10:
-            scoreboard.reset()
-            snake.reset()
+resources = {
+    "water": 300,
+    "milk": 200,
+    "coffee": 100,
+}
 
 
+def resources_check(order):
+    if order == "espresso":
+        if MENU[order]["ingredients"]["water"] < resources["water"] and MENU[order]["ingredients"]["coffee"] < resources["coffee"]:
+            return True
+    if order == "latte" or "cappuccino":
+        if MENU[order]["ingredients"]["water"] < resources["water"] and MENU[order]["ingredients"]["milk"] < resources["milk"] and MENU[order]["ingredients"]["coffee"] < resources["coffee"]:
+            return True
+    else:
+        return False
 
-my_screen.title("Snake Game")
-my_screen.exitonclick()
+def is_resources_sufficient(order):
+    for item in order:
+        if order[item] > resources[item]:
+            print("Resourses are not available")
+            return False
+    return True
+
+total_price = 0
+
+
+def process_coins(order, pennies, nickles, dimes, quaters):
+    global total_price
+    total = pennies*0.25 + nickles*0.10 + dimes*0.05 + quaters*0.01
+    order_price = MENU[order]["cost"]
+    if total >= order_price:
+        change = round(total - MENU[order]["cost"],2)
+        print(f"Here's your change: {change}")
+        print(f"Enjoy your {order}")
+        total_price += order_price
+        resources["cost"] = total_price
+        # resources["milk"] = resources["milk"] - MENU[order]["ingredients"]["milk"]
+        # resources["coffee"] = resources["coffee"] - MENU[order]["ingredients"]["coffee"]
+        # resources["water"] = resources["water"] - MENU[order]["ingredients"]["water"]
+    elif total < MENU[order]["cost"]:
+        print("Sorry that's not enough money")
+
+
+def make_coffee(drink_name,order_ingredients):
+    for item in order_ingredients:
+        resources[item] -= order_ingredients[item]
+    print(f"Here is your {drink_name}")
+
+
+price = 0
+turn_on = True
+while turn_on:
+    user = input("What would you like? (espresso/latte/cappuccino): ").lower()
+    if user == "report":
+        print(resources)
+    elif user == "off":
+        turn_on = False
+    elif user == "espresso" or "latte" or "cappuccino":
+        availability = resources_check(user)
+        if availability:
+            print("Please insert coin:")
+            quaters = int(input("How many quaters: "))
+            dimes = int(input("How many dimes: "))
+            nickles = int(input("How many nickles: "))
+            pennies = int(input("How many pennies: "))
+            process_coins(user,pennies,nickles,dimes,quaters)
+            make_coffee(user,MENU[user]["ingredients"])
+        else:
+            print("Resourses are not available")
+    # else:
+    #     drink = MENU[user]
+    #     is_resources_sufficient(drink["ingredients"])
+
+
+
+
+
+
+
+
+
+
